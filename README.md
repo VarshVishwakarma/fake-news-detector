@@ -1,60 +1,122 @@
-# fake-news-detector
-An AI-powered Fake News Detector that helps students identify misinformation. Built with Python, scikit-learn, and Streamlit, it classifies news articles as Real or Fake using a trained ML model. Simple, fast, and extendable with advanced NLP for accurate, trustworthy results.
+AI-Powered Fake News Detector
 
-# Fake News Detector  
+A web application built with Streamlit, leveraging machine learning and the Gemini API to detect whether a news article is likely real or fake.
 
-## Overview  
-Misinformation spreads rapidly online, making it difficult for students to identify trustworthy content.  
-This **AI-powered Fake News Detector** uses Machine Learning to classify news articles as **Real** or **Fake**.  
-Built with **Python, scikit-learn, and Streamlit**, it provides a clean interface to quickly analyze news credibility.  
+Overview
 
----
+This project provides a user-friendly interface where users can enter a topic of interest. It then uses the Gemini API to perform a web search, retrieve a recent news article, generate a concise summary, and analyze it using a pre-trained Logistic Regression model to classify the article as "Real" or "Fake".
 
-## Features  
-- Detects **Real vs Fake** news using a trained ML model  
-- Simple **Streamlit web app** for easy interaction  
-- **Logistic Regression model** with TF-IDF vectorizer  
-- Fast predictions with saved model and vectorizer  
-- Extendable to advanced NLP models like **BERT/RoBERTa**  
+Features
 
----
+Real-time News Analysis: Fetches and analyzes the latest news articles from the web.
 
-## Tech Stack  
-- **Python 3**  
-- **scikit-learn** (ML model training)  
-- **joblib** (Model & vectorizer storage)  
-- **Streamlit** (Web app framework)  
-- **pandas, numpy** (Data handling)  
+AI-Powered Summarization: Utilizes Google's Gemini API to generate concise summaries.
 
----
+Machine Learning Classification: Uses a trained TF-IDF Vectorizer and Logistic Regression model to detect fake news.
 
-## Project Structure  
-Fake-News-Detector/
-│
-├── app.py # Streamlit web app
-├── model.jb # Trained ML model
-├── vectorizer.jb # Saved vectorizer
-├── requirements.txt # Dependencies
-└── README.md # Project description
+Source Linking: Provides a direct link to the original article for verification.
 
-yaml
-Copy code
+Simple Web Interface: Easy-to-use UI built with Streamlit.
 
----
+How It Works
 
-## How to Run  
-1. Clone this repository:  
-   ```bash
-   git clone https://github.com/your-username/Fake-News-Detector.git
-   cd Fake-News-Detector
+User Input: Enter a news topic (e.g., "global economy") in the text field.
+
+API Call: The app uses the Gemini API to search the web for the latest related news.
+
+Summarization: The Gemini API returns:
+
+A concise AI-generated summary.
+
+The original article title and URL.
+
+Text Transformation: The summary is transformed into a numerical format using a pre-trained TF-IDF Vectorizer (vectorizer.jb).
+
+Prediction: The transformed data is fed into a pre-trained Logistic Regression model (lr_model.jb), producing a prediction:
+
+1 = Real
+
+0 = Fake
+
+Display Results: The app shows:
+
+Article title
+
+Summary
+
+Authenticity prediction (color-coded)
+
+Link to the original source
+
+Getting Started
+
+Prerequisites
+
+Python 3.7 or higher
+
+Pre-trained model files:
+
+vectorizer.jb
+
+lr_model.jb
+
+Installation
+
+Clone the repository:
+
+git clone https://your-repository-url.git
+cd your-project-folder
+
+
+Create requirements.txt with the following content:
+
+streamlit
+joblib
+requests
+scikit-learn
+
+
 Install dependencies:
 
-bash
-Copy code
 pip install -r requirements.txt
-Run the app:
 
-bash
-Copy code
+
+Place model files: Ensure vectorizer.jb and lr_model.jb are in the same directory as app.py.
+
+API Key
+
+The Gemini API key is already hardcoded into app.py. No additional configuration is needed.
+
+Usage
+
+Run the Streamlit app:
+
 streamlit run app.py
-Enter a news article text and check whether it is Real or Fake.
+
+
+Open in browser:
+Streamlit will display a local URL (e.g., http://localhost:8501).
+Open it in your browser.
+
+Analyze news:
+Enter a topic and click "Fetch and Check News" to get results.
+
+Project Files
+
+app.py — Main application logic and API calls.
+
+vectorizer.jb — Saved TF-IDF vectorizer object.
+
+lr_model.jb — Saved Logistic Regression model object.
+
+README.md — This file.
+
+Future Improvements
+
+Add multi-language support.
+
+Improve model accuracy using deep learning-based NLP models.
+
+Integrate a confidence score with predictions.
+
+Add user authentication for personalized analysis.
