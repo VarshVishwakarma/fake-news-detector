@@ -1,58 +1,51 @@
-AI-Powered Fake News Detector
+📰 AI-Powered Fake News Detector
 
 A web application built with Streamlit, leveraging machine learning and the Gemini API to detect whether a news article is likely real or fake.
 
-Overview
+🔍 Overview
 
-This project provides a user-friendly interface where users can enter a topic of interest. It then uses the Gemini API to perform a web search, retrieve a recent news article, generate a concise summary, and analyze it using a pre-trained Logistic Regression model to classify the article as "Real" or "Fake".
+This project provides a user-friendly interface for detecting fake news. Users can enter a topic of interest, and the app will:
 
-Features
+Fetch the latest news article using the Gemini API.
 
-Real-time News Analysis: Fetches and analyzes the latest news articles from the web.
+Generate a concise AI summary.
 
-AI-Powered Summarization: Utilizes Google's Gemini API to generate concise summaries.
+Analyze the text with a pre-trained Logistic Regression model to classify it as Real or Fake.
 
-Machine Learning Classification: Uses a trained TF-IDF Vectorizer and Logistic Regression model to detect fake news.
+✨ Features
 
-Source Linking: Provides a direct link to the original article for verification.
+Real-time News Analysis: Fetches and analyzes the latest news articles.
 
-Simple Web Interface: Easy-to-use UI built with Streamlit.
+AI-Powered Summarization: Uses Gemini API to generate concise summaries.
 
-How It Works
+Machine Learning Classification: TF-IDF + Logistic Regression for fake news detection.
+
+Source Linking: Direct link to the original article for verification.
+
+Simple Web Interface: Easy-to-use UI powered by Streamlit.
+
+⚙️ How It Works
 
 User Input: Enter a news topic (e.g., "global economy") in the text field.
 
-API Call: The app uses the Gemini API to search the web for the latest related news.
+API Call: App fetches the latest news related to the topic via Gemini API.
 
-Summarization: The Gemini API returns:
+Summarization: Returns an AI-generated summary, title, and URL.
 
-A concise AI-generated summary.
+Text Transformation: Summary is converted using TF-IDF vectorizer (vectorizer.jb).
 
-The original article title and URL.
+Prediction: Logistic Regression model (lr_model.jb) predicts:
 
-Text Transformation: The summary is transformed into a numerical format using a pre-trained TF-IDF Vectorizer (vectorizer.jb).
+1 → Real
 
-Prediction: The transformed data is fed into a pre-trained Logistic Regression model (lr_model.jb), producing a prediction:
+0 → Fake
 
-1 = Real
+Display Results: Shows title, summary, authenticity prediction (color-coded), and original source link.
 
-0 = Fake
-
-Display Results: The app shows:
-
-Article title
-
-Summary
-
-Authenticity prediction (color-coded)
-
-Link to the original source
-
-Getting Started
-
+🚀 Getting Started
 Prerequisites
 
-Python 3.7 or higher
+Python 3.7+
 
 Pre-trained model files:
 
@@ -61,62 +54,56 @@ vectorizer.jb
 lr_model.jb
 
 Installation
-
-Clone the repository:
-
+# Clone the repository
 git clone https://your-repository-url.git
 cd your-project-folder
 
+# Install dependencies
+pip install -r requirements.txt
 
-Create requirements.txt with the following content:
+
+requirements.txt:
 
 streamlit
 joblib
 requests
 scikit-learn
 
-
-Install dependencies:
-
-pip install -r requirements.txt
-
-
-Place model files: Ensure vectorizer.jb and lr_model.jb are in the same directory as app.py.
-
-API Key
-
-The Gemini API key is already hardcoded into app.py. No additional configuration is needed.
-
 Usage
+
+Place model files (vectorizer.jb, lr_model.jb) in the same directory as app.py.
 
 Run the Streamlit app:
 
 streamlit run app.py
 
 
-Open in browser:
-Streamlit will display a local URL (e.g., http://localhost:8501).
-Open it in your browser.
+Open the local URL (e.g., http://localhost:8501
+) in your browser.
 
-Analyze news:
-Enter a topic and click "Fetch and Check News" to get results.
+Enter a topic and click “Fetch and Check News” to get results.
 
-Project Files
+🗂️ Project Files
+File	Description
+app.py	Main application logic & API calls
+vectorizer.jb	Saved TF-IDF vectorizer object
+lr_model.jb	Saved Logistic Regression model object
+README.md	Project documentation
+🔮 Future Improvements
 
-app.py — Main application logic and API calls.
+Multi-language support.
 
-vectorizer.jb — Saved TF-IDF vectorizer object.
+Improve accuracy with deep learning-based NLP models.
 
-lr_model.jb — Saved Logistic Regression model object.
-
-README.md — This file.
-
-Future Improvements
-
-Add multi-language support.
-
-Improve model accuracy using deep learning-based NLP models.
-
-Integrate a confidence score with predictions.
+Integrate confidence scores with predictions.
 
 Add user authentication for personalized analysis.
+
+📈 Screenshot / Demo
+
+(You can insert a screenshot of the app UI here for extra style)
+
+🛡️ License
+
+This project is licensed under the MIT License — see the LICENSE
+ file for details.
