@@ -90,6 +90,4 @@ if st.button("Fetch and Check News"):
     else:
         st.warning("Please enter a topic.")
 
-st.markdown("""
 <meta name="google-site-verification" content="1r5FxF8NU9p42aDKcS0B4HV-bUJ7atwq0AQ5bE-FIzg" />
-""", unsafe_allow_html=True)
