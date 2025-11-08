@@ -1,4 +1,3 @@
-# === FORCING A CACHE UPDATE ===
 import streamlit as st
 import joblib
 import requests
@@ -6,22 +5,15 @@ import os
 
 st.markdown("""
 <meta name="google-site-verification" content="1r5FxF8NU9p42aDKcS0B4HV-bUJ7atwq0AQ5bE-FIzg" />
-
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<meta name="google-site-verification" content="1r5FxF8NU9p42aDKcS0B4HV-bUJ7atwq0AQ5bE-FIzg" />
-
 """, unsafe_allow_html=True)
 
 try:
     vectorizer = joblib.load('vectorizer.jb')
     model = joblib.load('lr_model.jb')
-except FileNotFoundError:
-    st.error("Model or vectorizer file not found. Please ensure 'vectorizer.jb' and 'lr_model.jb' are present in the directory.")
-    
+except Exception as e:
+    st.error(f"CRITICAL BOOT ERROR: Failed to load model files. This is likely a scikit-learn/joblib version mismatch.")
+    st.error(f"Error details: {e}")
     st.stop()
-
 
 
 GEMINI_API_KEY = "AIzaSyBQHX3Ez610_q8TQi2Rm9-iIhP_BYNLspI"
@@ -104,4 +96,5 @@ st.markdown("""
 <meta name="google-site-verification" content="1r5FxF8NU9p42aDKcS0B4HV-bUJ7atwq0AQ5bE-FIzg" />
 
 """, unsafe_allow_html=True)
+
 
