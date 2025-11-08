@@ -89,3 +89,5 @@ if st.button("Fetch and Check News"):
                 st.warning("Could not find any news articles for that topic. Please try another one.")
     else:
         st.warning("Please enter a topic.")
+
+<meta name="google-site-verification" content="1r5FxF8NU9p42aDKcS0B4HV-bUJ7atwq0AQ5bE-FIzg" />
