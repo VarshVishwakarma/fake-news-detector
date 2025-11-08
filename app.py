@@ -5,10 +5,7 @@ import os
 
 st.markdown("""
 <meta name="google-site-verification" content="1r5FxF8NU9p42aDKcS0B4HV-bUJ7atwq0AQ5bE-FIzg" />
-<<<<<<< HEAD
-
-=======
->>>>>>> 7ec90a9fdd7f48630a9cb3e1e4f0b6239c83071d
+            
 """, unsafe_allow_html=True)
 
 try:
