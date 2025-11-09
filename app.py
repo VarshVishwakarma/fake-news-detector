@@ -3,15 +3,15 @@ import joblib
 import requests
 import os
 
-st.markdown("""
-<meta name="google-site-verification" content="1r5FxF8NU9p42aDKcS0B4HV-bUJ7atwq0AQ5bE-FIzg" />
-""", unsafe_allow_html=True)
-
 st.set_page_config(
     page_title="Free Fake News Detector | AI-Powered Analysis",
     page_icon="📰",
     layout="centered"
 )
+
+st.markdown("""
+<meta name="google-site-verification" content="1r5FxF8NU9p42aDKcS0B4HV-bUJ7atwq0AQ5bE-FIzg" />
+""", unsafe_allow_html=True)
 
 try:
     vectorizer = joblib.load('vectorizer.jb')
@@ -97,4 +97,3 @@ if st.button("Fetch and Check News"):
                 st.warning("Could not find any news articles for that topic. Please try another one.")
     else:
         st.warning("Please enter a topic.")
-
