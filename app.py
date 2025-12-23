@@ -3,17 +3,32 @@ import joblib
 import requests
 import os
 
+# --- STEP 1: SET PAGE CONFIG (MUST BE FIRST) ---
+st.set_page_config(
+    page_title="Free Fake News Detector | AI-Powered Analysis",
+    page_icon="📰",
+    layout="centered"
+)
+
+# --- STEP 2: GOOGLE VERIFICATION TAG ---
+st.markdown("""
+<meta name="google-site-verification" content="1r5FxF8NU9p42aDKcS0B4HV-bUJ7atwq0AQ5bE-FIzg" />
+""", unsafe_allow_html=True)
+
+# --- STEP 3: LOAD MODELS SAFELY ---
 try:
+    # Using 'rb' for joblib files is safer
     vectorizer = joblib.load('vectorizer.jb')
     model = joblib.load('lr_model.jb')
 except Exception as e:
-    st.error(f"CRITICAL BOOT ERROR: Failed to load model files. This is likely a scikit-learn/joblib version mismatch.")
+    st.error(f"CRITICAL BOOT ERROR: Failed to load model files.")
     st.error(f"Error details: {e}")
     st.stop()
 
-
+# --- STEP 4: API CONFIG (UPDATED TO STABLE MODEL) ---
 GEMINI_API_KEY = "AIzaSyBQHX3Ez610_q8TQi2Rm9-iIhP_BYNLspI"
-GEMINI_API_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={GEMINI_API_KEY}"
+# Changed model name to 'gemini-2.5-flash' to fix the 404 error
+GEMINI_API_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 def fetch_and_summarize_news_with_gemini(topic):
     """
@@ -36,7 +51,6 @@ def fetch_and_summarize_news_with_gemini(topic):
         candidate = data.get('candidates', [{}])[0]
         summary = candidate.get('content', {}).get('parts', [{}])[0].get('text')
         
-
         grounding_metadata = candidate.get('groundingMetadata', {})
         attribution = grounding_metadata.get('groundingAttributions', [{}])[0].get('web', {})
         title = attribution.get('title', 'No Title Found')
@@ -48,33 +62,31 @@ def fetch_and_summarize_news_with_gemini(topic):
             return None, None, None
             
     except requests.exceptions.RequestException as e:
+        # This will now catch 404s if the model name changes again
         st.error(f"Failed to fetch news via Gemini. Error: {e}")
         return None, None, None
     except (KeyError, IndexError):
-        st.error("Could not parse the response from the Gemini API. The structure might have changed or the response was empty.")
+        st.error("Could not parse the response from the Gemini API.")
         return None, None, None
 
-
-st.set_page_config(page_title="Fake News Detector", layout="centered")
-
+# --- STEP 5: APP UI ---
 st.title("📰 AI-Powered News Analyzer")
-st.markdown("This tool uses the Gemini API to fetch, summarize, and analyze the latest news from the web to determine if it's likely real or fake.")
+st.markdown("This tool uses the Gemini API to fetch, summarize, and analyze the latest news.")
 
 st.header("Analyze the Latest News")
-st.write("Enter a topic to have Gemini find and check the latest article.")
-
-topic_input = st.text_input("News Topic (e.g., 'global economy', 'advances in AI'):", "")
+topic_input = st.text_input("News Topic (e.g., 'global economy'):", "")
 
 if st.button("Fetch and Check News"):
     if topic_input.strip():
-        with st.spinner(f"Gemini is searching for news about '{topic_input}'..."):
+        with st.spinner(f"Searching for news about '{topic_input}'..."):
             summary, article_title, article_url = fetch_and_summarize_news_with_gemini(topic_input)
             
             if summary:
                 st.subheader("Fetched Article Details")
                 st.markdown(f"**Title:** [{article_title}]({article_url})")
-                st.info(f"**AI-Generated Summary being analyzed:**\n\n \"{summary}\"")
+                st.info(f"**Summary:**\n\n \"{summary}\"")
                 
+                # Machine Learning Prediction
                 transformed_input = vectorizer.transform([summary])
                 prediction = model.predict(transformed_input)
                 
@@ -84,6 +96,6 @@ if st.button("Fetch and Check News"):
                 else:
                     st.error("❌ The news is likely FAKE.")
             else:
-                st.warning("Could not find any news articles for that topic. Please try another one.")
+                st.warning("Could not find any news articles for that topic.")
     else:
         st.warning("Please enter a topic.")
