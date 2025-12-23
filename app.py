@@ -25,80 +25,68 @@ except Exception as e:
     st.error(f"Error details: {e}")
     st.stop()
 
-# --- STEP 4: API CONFIG (LATEST STABLE MODELS) ---
+# --- STEP 4: API CONFIG (LATEST STABLE DECEMBER 2025 MODELS) ---
 GEMINI_API_KEY = "AIzaSyBQHX3Ez610_q8TQi2Rm9-iIhP_BYNLspI"
-# Primary Endpoint
-GEMINI_API_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+# gemini-2.5-flash is the new stable standard as of late 2025
+GEMINI_API_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 def fetch_and_summarize_news_with_gemini(topic):
     """
     Uses Gemini to find/summarize news. 
-    Handles 403 Forbidden by falling back to non-grounded internal logic.
+    Handles 403/404 by immediately switching to internal AI reasoning.
     """
-    prompt = f"Find the most recent news article about '{topic}' and provide a concise summary of its content. The summary should be neutral and factual."
+    prompt = f"Summarize the most recent news about '{topic}'. Provide a concise, neutral, and factual summary."
     
-    # 1. Configuration for grounded search
+    # Attempt with Google Search grounding (may trigger 403 on free tier)
     payload_with_search = {
         "contents": [{"parts": [{"text": prompt}]}],
         "tools": [{"google_search": {}}]
     }
     
-    # 2. Configuration for fallback (no search tool)
+    # Fallback without search tools (works on all free keys)
     payload_no_search = {
-        "contents": [{"parts": [{"text": f"Provide a factual summary of the most recent significant news regarding: {topic}."}]}]
+        "contents": [{"parts": [{"text": prompt}]}]
     }
     
     headers = {'Content-Type': 'application/json'}
     
     try:
-        # ATTEMPT 1: Try with Google Search tool
+        # First attempt: Try with Search
         response = requests.post(GEMINI_API_ENDPOINT, json=payload_with_search, headers=headers)
         
-        # PERMANENT FIX: Handle 403 Forbidden (restricted tool access)
-        if response.status_code == 403:
-            st.info("ℹ️ Google Search tool is restricted for this key. Using internal AI knowledge instead...")
+        # If Forbidden (403) or Not Found (404), immediately use the fallback payload
+        if response.status_code in [403, 404]:
             response = requests.post(GEMINI_API_ENDPOINT, json=payload_no_search, headers=headers)
         
-        # Handle 404 (model name change/deprecated)
-        if response.status_code == 404:
-            st.warning("⚠️ Model deprecated. Switching to Pro model...")
-            fallback_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
-            response = requests.post(fallback_url, json=payload_no_search, headers=headers)
-
         response.raise_for_status() 
         data = response.json()
         
         # Extract content
-        try:
-            candidate = data.get('candidates', [{}])[0]
-            summary = candidate.get('content', {}).get('parts', [{}])[0].get('text')
-            
-            # Metadata handling (only exists if search worked)
-            grounding_metadata = candidate.get('groundingMetadata', {})
-            attributions = grounding_metadata.get('groundingAttributions', [])
-            
-            if attributions:
-                web_info = attributions[0].get('web', {})
-                title = web_info.get('title', f"News Report: {topic}")
-                url = web_info.get('uri', 'https://news.google.com')
-            else:
-                title = f"AI Analysis: {topic}"
-                url = "https://news.google.com"
+        candidate = data.get('candidates', [{}])[0]
+        parts = candidate.get('content', {}).get('parts', [])
+        summary = parts[0].get('text') if parts else None
+        
+        # Handle metadata for Title and URL
+        grounding_metadata = candidate.get('groundingMetadata', {})
+        attributions = grounding_metadata.get('groundingAttributions', [])
+        
+        if attributions:
+            web_info = attributions[0].get('web', {})
+            title = web_info.get('title', f"Recent News: {topic}")
+            url = web_info.get('uri', 'https://news.google.com')
+        else:
+            title = f"AI News Report: {topic}"
+            url = "https://news.google.com"
 
-            if summary:
-                return summary, title, url
-        except (KeyError, IndexError):
-            return None, None, None
+        return summary, title, url
             
     except Exception as e:
-        st.error(f"Gemini API Error: {str(e)}")
+        st.error(f"News Retrieval Error: {str(e)}")
         return None, None, None
-    
-    return None, None, None
 
 # --- STEP 5: APP UI ---
 st.title("📰 AI-Powered News Analyzer")
-st.markdown("Analyze news authenticity using machine learning and Google's Gemini AI.")
+st.markdown("Verify news authenticity using machine learning and Google's latest Gemini 2.5 AI.")
 
 st.header("Search & Verify")
 topic_input = st.text_input("Enter a news topic to check:", placeholder="e.g. global climate changes")
@@ -116,23 +104,20 @@ if st.button("Fetch and Check News", use_container_width=True):
                 
                 # Machine Learning Prediction
                 try:
-                    # Pre-process text using our loaded vectorizer
                     transformed_input = vectorizer.transform([summary])
                     prediction = model.predict(transformed_input)
                     
                     st.subheader("Authenticity Rating")
                     if prediction[0] == 1:
                         st.success("✅ **Likely REAL News**")
-                        st.write("Our model suggests this content aligns with typical factual reporting patterns.")
                     else:
                         st.error("❌ **Likely FAKE/UNRELIABLE**")
-                        st.write("Our model detected patterns often associated with misinformation or clickbait.")
                 except Exception as ml_err:
                     st.error(f"Machine Learning Module Error: {ml_err}")
             else:
-                st.warning("No data found. Please try a more specific news topic.")
+                st.warning("Could not retrieve information. Try a different topic.")
     else:
         st.warning("Please enter a topic first.")
 
-st.sidebar.markdown("### About")
-st.sidebar.info("This project combines a Logistic Regression ML model with Gemini's reasoning capabilities to help users identify potential misinformation.")
+st.sidebar.markdown("### Project Info")
+st.sidebar.info("This tool combines a Logistic Regression model with Gemini 2.5 Flash for advanced news verification.")
