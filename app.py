@@ -17,7 +17,6 @@ st.markdown("""
 
 # --- STEP 3: LOAD MODELS SAFELY ---
 try:
-    # Using 'rb' for joblib files is safer
     vectorizer = joblib.load('vectorizer.jb')
     model = joblib.load('lr_model.jb')
 except Exception as e:
@@ -25,9 +24,15 @@ except Exception as e:
     st.error(f"Error details: {e}")
     st.stop()
 
-# --- STEP 4: API CONFIG (LATEST STABLE DECEMBER 2025 MODELS) ---
-GEMINI_API_KEY = "AIzaSyBQHX3Ez610_q8TQi2Rm9-iIhP_BYNLspI"
-# gemini-2.5-flash is the new stable standard as of late 2025
+# --- STEP 4: API CONFIG (SECURED VIA SECRETS) ---
+# We retrieve the key from st.secrets instead of hardcoding it.
+try:
+    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+except KeyError:
+    st.error("Missing Gemini API Key. Please add it to your Streamlit Secrets.")
+    st.stop()
+
+# Using the latest stable gemini-2.5-flash model
 GEMINI_API_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 def fetch_and_summarize_news_with_gemini(topic):
@@ -37,13 +42,11 @@ def fetch_and_summarize_news_with_gemini(topic):
     """
     prompt = f"Summarize the most recent news about '{topic}'. Provide a concise, neutral, and factual summary."
     
-    # Attempt with Google Search grounding (may trigger 403 on free tier)
     payload_with_search = {
         "contents": [{"parts": [{"text": prompt}]}],
         "tools": [{"google_search": {}}]
     }
     
-    # Fallback without search tools (works on all free keys)
     payload_no_search = {
         "contents": [{"parts": [{"text": prompt}]}]
     }
@@ -51,22 +54,19 @@ def fetch_and_summarize_news_with_gemini(topic):
     headers = {'Content-Type': 'application/json'}
     
     try:
-        # First attempt: Try with Search
         response = requests.post(GEMINI_API_ENDPOINT, json=payload_with_search, headers=headers)
         
-        # If Forbidden (403) or Not Found (404), immediately use the fallback payload
+        # If Forbidden or Not Found, fallback to internal knowledge
         if response.status_code in [403, 404]:
             response = requests.post(GEMINI_API_ENDPOINT, json=payload_no_search, headers=headers)
         
         response.raise_for_status() 
         data = response.json()
         
-        # Extract content
         candidate = data.get('candidates', [{}])[0]
         parts = candidate.get('content', {}).get('parts', [])
         summary = parts[0].get('text') if parts else None
         
-        # Handle metadata for Title and URL
         grounding_metadata = candidate.get('groundingMetadata', {})
         attributions = grounding_metadata.get('groundingAttributions', [])
         
@@ -86,7 +86,7 @@ def fetch_and_summarize_news_with_gemini(topic):
 
 # --- STEP 5: APP UI ---
 st.title("📰 AI-Powered News Analyzer")
-st.markdown("Verify news authenticity using machine learning and Google's latest Gemini 2.5 AI.")
+st.markdown("Verify news authenticity using machine learning and Google's latest Gemini AI.")
 
 st.header("Search & Verify")
 topic_input = st.text_input("Enter a news topic to check:", placeholder="e.g. global climate changes")
@@ -102,7 +102,6 @@ if st.button("Fetch and Check News", use_container_width=True):
                 st.markdown(f"**Title:** [{article_title}]({article_url})")
                 st.info(f"**Content Summary:**\n\n {summary}")
                 
-                # Machine Learning Prediction
                 try:
                     transformed_input = vectorizer.transform([summary])
                     prediction = model.predict(transformed_input)
