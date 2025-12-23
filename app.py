@@ -25,18 +25,19 @@ except Exception as e:
     st.error(f"Error details: {e}")
     st.stop()
 
-# --- STEP 4: API CONFIG (UPDATED TO STABLE MODEL) ---
+# --- STEP 4: API CONFIG (STABLE MODELS) ---
 GEMINI_API_KEY = "AIzaSyBQHX3Ez610_q8TQi2Rm9-iIhP_BYNLspI"
-# Changed model name to 'gemini-2.5-flash' to fix the 404 error
-GEMINI_API_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+# gemini-1.5-flash is currently the most robust for tool usage across regions
+GEMINI_API_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 def fetch_and_summarize_news_with_gemini(topic):
     """
-    Uses Gemini with Google Search grounding to find and summarize a recent news article.
+    Uses Gemini to find/summarize news. Includes a fallback if the search tool is forbidden (403).
     """
     prompt = f"Find the most recent news article about '{topic}' and provide a concise summary of its content. The summary should be neutral and factual."
     
-    payload = {
+    # Try with Google Search grounding first
+    payload_with_search = {
         "contents": [{"parts": [{"text": prompt}]}],
         "tools": [{"google_search": {}}]
     }
@@ -44,26 +45,36 @@ def fetch_and_summarize_news_with_gemini(topic):
     headers = {'Content-Type': 'application/json'}
     
     try:
-        response = requests.post(GEMINI_API_ENDPOINT, json=payload, headers=headers)
+        # ATTEMPT 1: With Search Tool
+        response = requests.post(GEMINI_API_ENDPOINT, json=payload_with_search, headers=headers)
+        
+        # If we get a 403, the API Key/Region likely doesn't support the Search Tool
+        if response.status_code == 403:
+            st.warning("⚠️ Google Search tool access is restricted for this API key. Falling back to internal AI knowledge...")
+            payload_no_search = {
+                "contents": [{"parts": [{"text": f"Summarize the latest known facts about the topic: {topic}. Be neutral and factual."}]}]
+            }
+            response = requests.post(GEMINI_API_ENDPOINT, json=payload_no_search, headers=headers)
+            
         response.raise_for_status() 
         data = response.json()
         
         candidate = data.get('candidates', [{}])[0]
         summary = candidate.get('content', {}).get('parts', [{}])[0].get('text')
         
+        # Metadata might be missing in fallback mode
         grounding_metadata = candidate.get('groundingMetadata', {})
-        attribution = grounding_metadata.get('groundingAttributions', [{}])[0].get('web', {})
-        title = attribution.get('title', 'No Title Found')
-        url = attribution.get('uri', '#')
+        attribution = grounding_metadata.get('groundingAttributions', [{}])[0].get('web', {}) if grounding_metadata else {}
+        title = attribution.get('title', f"News Report: {topic}")
+        url = attribution.get('uri', 'https://news.google.com')
 
-        if summary and title:
+        if summary:
             return summary, title, url
         else:
             return None, None, None
             
     except requests.exceptions.RequestException as e:
-        # This will now catch 404s if the model name changes again
-        st.error(f"Failed to fetch news via Gemini. Error: {e}")
+        st.error(f"Gemini API Error: {e}")
         return None, None, None
     except (KeyError, IndexError):
         st.error("Could not parse the response from the Gemini API.")
@@ -83,19 +94,22 @@ if st.button("Fetch and Check News"):
             
             if summary:
                 st.subheader("Fetched Article Details")
-                st.markdown(f"**Title:** [{article_title}]({article_url})")
-                st.info(f"**Summary:**\n\n \"{summary}\"")
+                st.markdown(f"**Source:** [{article_title}]({article_url})")
+                st.info(f"**AI Summary:**\n\n \"{summary}\"")
                 
                 # Machine Learning Prediction
-                transformed_input = vectorizer.transform([summary])
-                prediction = model.predict(transformed_input)
-                
-                st.subheader("Analysis Result")
-                if prediction[0] == 1:
-                    st.success("✅ The news is likely REAL.")
-                else:
-                    st.error("❌ The news is likely FAKE.")
+                try:
+                    transformed_input = vectorizer.transform([summary])
+                    prediction = model.predict(transformed_input)
+                    
+                    st.subheader("Analysis Result")
+                    if prediction[0] == 1:
+                        st.success("✅ The news is likely REAL.")
+                    else:
+                        st.error("❌ The news is likely FAKE.")
+                except Exception as ml_err:
+                    st.error(f"ML Model Error: {ml_err}")
             else:
-                st.warning("Could not find any news articles for that topic.")
+                st.warning("Could not retrieve info for that topic.")
     else:
         st.warning("Please enter a topic.")
