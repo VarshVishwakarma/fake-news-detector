@@ -25,10 +25,10 @@ except Exception as e:
     st.error(f"Error details: {e}")
     st.stop()
 
-# --- STEP 4: API CONFIG (STABLE MODELS) ---
+# --- STEP 4: API CONFIG (LATEST STABLE MODELS) ---
 GEMINI_API_KEY = "AIzaSyBQHX3Ez610_q8TQi2Rm9-iIhP_BYNLspI"
-# gemini-1.5-flash is currently the most robust for tool usage across regions
-GEMINI_API_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+# Updated to gemini-2.5-flash as gemini-1.5-flash has been deprecated/retired
+GEMINI_API_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 def fetch_and_summarize_news_with_gemini(topic):
     """
@@ -55,6 +55,12 @@ def fetch_and_summarize_news_with_gemini(topic):
                 "contents": [{"parts": [{"text": f"Summarize the latest known facts about the topic: {topic}. Be neutral and factual."}]}]
             }
             response = requests.post(GEMINI_API_ENDPOINT, json=payload_no_search, headers=headers)
+        
+        # If we get a 404 here, it means the model name itself is incorrect or has changed again
+        if response.status_code == 404:
+            st.error("Model Error: The requested Gemini model was not found. We are attempting to use a generic fallback...")
+            fallback_endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+            response = requests.post(fallback_endpoint, json=payload_with_search, headers=headers)
             
         response.raise_for_status() 
         data = response.json()
