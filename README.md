@@ -107,3 +107,7 @@ Add user authentication for personalized analysis.
 
 This project is licensed under the MIT License — see the LICENSE
  file for details.
+
+🧑‍💻 Author
+
+Varsh Vishwakarma AI • ML • DL • Data Science • Cloud • Full-Stack ML Developer
